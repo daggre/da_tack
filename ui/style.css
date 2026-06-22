@@ -1,0 +1,136 @@
+/* da_tack UI — floating left-edge HUD (da_dev idiom): a title bar, a toolbar, and
+   two columns, each a borderless surface with a thin left accent over a
+   translucent fill (no blur in RedM), monospace, glow on hover/focus/equip. All
+   sizing is fixed-width + ellipsis so a long component name truncates instead of
+   resizing anything. Colours/sizes are CSS vars for easy per-element tuning. */
+
+:root {
+  --accent:    #8fb8ff;                  /* primary: text accents, bar, glow */
+  --accent-hi: #d7e6ff;                  /* brighter for focus/equip */
+  --text:      #cfdcf0;
+  --muted:     #7d92b4;
+  --dim:       #56688c;
+  --bg:        #05101e;
+  --fill:      rgba(6, 16, 30, 0.74);    /* surface fill (opaque-ish, no blur) */
+  --fill-2:    rgba(6, 16, 30, 0.55);
+  --soft:      rgba(143, 184, 255, 0.12);
+  --glow:      0 0 6px var(--accent);
+  --bar:       2px;
+  --rad:       7px;
+  --gap:       8px;
+  --col-cat:   10.5rem;
+  --col-item:  15.5rem;
+  --shell:     calc(var(--col-cat) + var(--gap) + var(--col-item)); /* bar width */
+}
+
+* { box-sizing: border-box; }
+*:not(input) { user-select: none; -webkit-user-select: none; }
+html, body { margin: 0; height: 100%; background: transparent;
+  font: 13px/1.45 ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+
+.hidden { display: none !important; }
+
+/* full-screen layer; everything hugs the LEFT edge, stacked with equal gaps */
+#app { position: fixed; inset: 0; display: flex; flex-direction: column;
+  align-items: flex-start; gap: var(--gap); padding: 14px;
+  color: var(--text); pointer-events: none; }
+
+/* shared floating surface: thin left accent + translucent fill + soft shadow */
+.bar, .col { pointer-events: auto; background: var(--fill);
+  border-left: var(--bar) solid var(--accent);
+  border-radius: 0 var(--rad) var(--rad) 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
+
+/* title + toolbar span the full width of the two columns below */
+.bar { width: var(--shell); display: flex; align-items: center; gap: 8px; padding: 5px 8px; }
+#toolbar { flex-wrap: wrap; align-content: flex-start; }
+
+#title { color: var(--accent); letter-spacing: .08em; text-transform: lowercase; text-shadow: var(--glow); }
+#ped { flex: 1; min-width: 0; color: var(--dim); font-size: 11px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* toolbar: strip · slot · save · saved-loadout chips */
+#slot { width: 5rem; flex: none; font: inherit; color: var(--text); background: var(--fill-2);
+  border: none; border-bottom: 1px solid var(--soft); padding: 2px 4px; outline: none; }
+#slot:focus { border-bottom-color: var(--accent); }
+#slot::placeholder { color: var(--dim); }
+#save { color: var(--accent); }
+#save:hover { color: var(--accent-hi); text-shadow: var(--glow); }
+#outfits { flex: 1 1 100%; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 12px;
+  margin-top: 2px; padding-top: 5px; border-top: 1px solid var(--soft); }
+#outfits:empty { border-top: none; padding-top: 0; margin-top: 0; }
+#outfits:empty::after { content: "no saved loadouts"; color: var(--dim); font-size: 11px; }
+.slot-chip { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.slot-chip .slot-name { cursor: pointer; }
+.slot-chip .slot-name:hover { color: var(--accent-hi); text-shadow: var(--glow); }
+.slot-chip .slot-del { cursor: pointer; color: var(--dim); }
+.slot-chip .slot-del:hover { color: #ff9b9b; }
+
+/* the two columns */
+#body { display: flex; align-items: flex-start; gap: var(--gap); min-height: 0; }
+.col { display: flex; flex-direction: column; min-height: 0; max-height: 80vh; }
+#categories { width: var(--col-cat); overflow-y: auto; padding: 6px 0; }
+#itempane   { width: var(--col-item); padding: 6px 0; }
+
+/* lists scroll; min-height:0 lets them shrink inside the flex column */
+.list { min-height: 0; overflow-y: auto; }
+#items { flex: 1; }
+
+/* category + item rows share the same low-profile, ellipsis, glow-on-hover feel */
+.cat, .item { display: flex; align-items: center; gap: 6px; min-width: 0;
+  padding: 2px 8px; cursor: pointer; color: var(--text); }
+.cat-name, .item-name { flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat:hover .cat-name, .item:hover .item-name { color: var(--accent-hi); text-shadow: var(--glow); }
+
+/* keyboard cursor */
+.item.focused .item-name, .cat.active .cat-name { color: var(--accent-hi); }
+
+/* equipped / occupied: a glowing dot + brighter label */
+.cat-dot, .item-dot { width: 5px; height: 5px; border-radius: 50%; flex: none;
+  background: var(--accent); box-shadow: var(--glow); visibility: hidden; }
+.cat.occupied .cat-dot, .item.equipped .item-dot { visibility: visible; }
+.item.equipped .item-name { color: var(--accent-hi); text-shadow: var(--glow); }
+
+.item-tag { color: var(--dim); font-size: 10px; }
+.empty { color: var(--dim); text-align: center; padding: 18px 8px; font-size: 12px; }
+
+/* dim count line under the list */
+#count { color: var(--dim); font-size: 10px; padding: 4px 8px 0; text-align: right; }
+#count:empty { display: none; }
+
+/* tint stepper */
+#tintbar { display: flex; align-items: center; gap: 8px; padding: 5px 8px;
+  margin-top: 4px; border-top: 1px solid var(--soft); }
+.tint-label { flex: 1; min-width: 0; color: var(--muted); font-size: 11px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tint-step { display: flex; align-items: center; gap: 6px; flex: none; }
+#tint-pos { min-width: 40px; text-align: center; font-size: 11px; color: var(--muted); }
+
+/* second-axis dropdown (wardrobe two-axis; unused by tack but kept in sync) */
+#axisbar { display: flex; align-items: center; gap: 6px; padding: 0 8px 6px; }
+.axis-label { color: var(--muted); font-size: 11px; flex: none; text-transform: lowercase; }
+.dd { position: relative; flex: 1; min-width: 0; }
+.dd-btn { width: 100%; display: flex; justify-content: space-between; gap: 6px; color: var(--text); }
+.dd-caret { color: var(--dim); font-size: 10px; }
+.dd-list { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 5;
+  max-height: 200px; overflow-y: auto; background: var(--bg);
+  border-left: var(--bar) solid var(--accent); border-radius: var(--rad);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); padding: 3px 0; }
+.dd-opt { padding: 2px 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dd-opt:hover, .dd-opt.sel { color: var(--accent-hi); text-shadow: var(--glow); }
+
+/* buttons: text-only, glow on hover */
+button { font: inherit; cursor: pointer; background: none; border: none;
+  color: var(--muted); padding: 2px 6px; text-transform: lowercase; }
+button:hover { color: var(--accent-hi); text-shadow: var(--glow); }
+
+/* item-column footer (per-category remove) */
+#actions { display: flex; align-items: center; gap: 4px; padding: 6px 8px 0;
+  margin-top: 4px; border-top: 1px solid var(--soft); }
+
+/* thin scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--soft) transparent; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--soft); border-radius: 6px; }

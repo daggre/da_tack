@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Left-edge floating HUD (da_dev idiom): a title bar, a toolbar, then two
+       columns — each surface separated by the same gap. Borderless, left-accent,
+       glow-on-interaction, ellipsis truncation so nothing resizes. -->
+  <div id="app" class="hidden">
+    <div id="titlebar" class="bar">
+      <span id="title">tack</span>
+      <span id="ped">—</span>
+      <button id="close" title="Close (Esc)">✕</button>
+    </div>
+
+    <div id="toolbar" class="bar">
+      <button id="strip" title="Strip all tack">strip</button>
+      <input id="slot" type="text" placeholder="slot" spellcheck="false" />
+      <button id="save">save</button>
+      <div id="outfits"></div>
+    </div>
+
+    <div id="body">
+      <div id="categories" class="col list"></div>
+
+      <div id="itempane" class="col">
+        <div id="axisbar" class="hidden">
+          <span class="axis-label" id="axis-label">color</span>
+          <div class="dd" id="axis-dd">
+            <button class="dd-btn" id="axis-btn">
+              <span id="axis-cur">—</span><span class="dd-caret">▾</span>
+            </button>
+            <div class="dd-list hidden" id="axis-list"></div>
+          </div>
+        </div>
+
+        <div id="items" class="list"></div>
+        <div id="count"></div>
+
+        <div id="tintbar" class="hidden">
+          <span class="tint-label" id="tint-name">—</span>
+          <div class="tint-step">
+            <button id="tint-prev">◂</button>
+            <span id="tint-pos">—</span>
+            <button id="tint-next">▸</button>
+          </div>
+        </div>
+
+        <div id="actions">
+          <button id="remove" title="Remove this category">remove</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
