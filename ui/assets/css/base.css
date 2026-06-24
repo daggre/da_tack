@@ -1,0 +1,107 @@
+/* da shared UI base — tokens + primitives for the whole da toolkit (da_dev,
+   da_wardrobe, da_tack). Authored once and copied VERBATIM into each resource's
+   assets/css/ (NUI is per-resource, so keep the copies in sync). Tokens are
+   da_dev's theme-engine vars (theme.js drives them at runtime) plus derived
+   structural tokens; the default theme is "moonlit orchid". Resource-specific
+   layout lives in each resource's own stylesheet, loaded after this. */
+
+@font-face {
+  font-family: LiterationMonoNerd;
+  src: url('../fonts/LiterationMonoNerd.ttf');
+}
+
+:root {
+  /* theme engine — da_dev's theme.js sets these at runtime; defaults = the "da"
+     (wardrobe) blue look so all three editors match out of the box */
+  --primary: #8fb8ff;
+  --secondary: #4a6fa5;
+  --secondary-light: #d7e6ff;
+  --bg: #05101e;
+  --bg-t1: #05101eab;
+  --bg-t2: #05101e75;
+  --bg-t3: #05101e22;
+  --brd-rad: 8px;
+  --brd-size: 2px;
+  --divider: ' ';
+
+  /* derived structural tokens */
+  --rad: var(--brd-rad);
+  --gap: 8px;
+  --surface: var(--bg-t1);
+  --surface-2: var(--bg-t2);
+  --glow: 0 0 6px var(--primary);
+
+  /* secondary text + accent tints — wardrobe's palette (near-white text on the
+     dark fill, with the blue accent reserved for glow/highlights) */
+  --text: #cfdcf0;
+  --muted: #7d92b4;
+  --dim: #56688c;
+  --soft: rgba(143, 184, 255, 0.14);
+
+  /* semantic aliases so editor stylesheets read cleanly */
+  --accent: var(--primary);
+  --accent-hi: var(--secondary-light);
+  --fill: var(--surface);
+  --fill-2: var(--surface-2);
+}
+
+* { box-sizing: border-box; }
+*:not(input) { user-select: none; -webkit-user-select: none; }
+/* wardrobe's original monospace stack (its charm). da_dev keeps the Nerd font
+   for its glyph icons via its own body rule, which loads after this. */
+html, body { margin: 0; height: 100%; background: transparent; color: var(--text);
+  font: 13px/1.45 ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+
+.hidden { display: none !important; }
+
+/* floating surface: thin themeable left accent + translucent fill (no blur) */
+.bar, .col { pointer-events: auto; background: var(--surface);
+  border-left: var(--brd-size) solid var(--primary);
+  border-radius: 0 var(--rad) var(--rad) 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
+.col { display: flex; flex-direction: column; min-height: 0; }
+.bar { display: flex; align-items: center; gap: var(--gap); padding: 5px 8px; }
+
+/* scrolling list + rows (category / item) */
+.list { min-height: 0; overflow-y: auto; }
+.cat, .item { display: flex; align-items: center; gap: 6px; min-width: 0;
+  padding: 2px 8px; cursor: pointer; color: var(--text); }
+.cat-name, .item-name { flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat:hover .cat-name, .item:hover .item-name { color: var(--accent-hi); text-shadow: var(--glow); }
+.item.focused .item-name, .cat.active .cat-name { color: var(--accent-hi); }
+.item.equipped .item-name { color: var(--accent-hi); text-shadow: var(--glow); }
+
+/* state dot for equipped / occupied */
+.cat-dot, .item-dot { width: 5px; height: 5px; border-radius: 50%; flex: none;
+  background: var(--primary); box-shadow: var(--glow); visibility: hidden; }
+.cat.occupied .cat-dot, .item.equipped .item-dot { visibility: visible; }
+
+.item-tag { color: var(--dim); font-size: 10px; }
+.empty { color: var(--dim); text-align: center; padding: 18px 8px; font-size: 12px; }
+
+/* text buttons + inputs */
+button { font: inherit; cursor: pointer; background: none; border: none;
+  color: var(--muted); padding: 2px 6px; }
+button:hover { color: var(--accent-hi); text-shadow: var(--glow); }
+input { font: inherit; color: var(--text); background: var(--surface-2);
+  border: none; border-bottom: 1px solid var(--soft); padding: 2px 4px; outline: none; }
+input:focus { border-bottom-color: var(--primary); }
+input::placeholder { color: var(--dim); }
+
+/* dropdown primitive */
+.dd { position: relative; min-width: 0; }
+.dd-btn { width: 100%; display: flex; justify-content: space-between; gap: 6px; color: var(--text); }
+.dd-caret { color: var(--dim); font-size: 10px; }
+.dd-list { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 5;
+  max-height: 200px; overflow-y: auto; background: var(--bg);
+  border-left: var(--brd-size) solid var(--primary); border-radius: var(--rad);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); padding: 3px 0; }
+.dd-opt { padding: 2px 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dd-opt:hover, .dd-opt.sel { color: var(--accent-hi); text-shadow: var(--glow); }
+
+/* thin scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--soft) transparent; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--soft); border-radius: 6px; }

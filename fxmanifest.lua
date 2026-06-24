@@ -40,6 +40,8 @@ ui_page 'ui/index.html'
 
 files {
     'ui/index.html',
+    'ui/assets/css/base.css',
+    'ui/assets/fonts/LiterationMonoNerd.ttf',
     'ui/style.css',
     'ui/script.js',
 }

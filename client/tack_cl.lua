@@ -6,6 +6,9 @@
 
 local open = false
 local previewHorse = nil
+-- True when previewHorse is the player's actual mount (not a spawned preview), so
+-- despawn never deletes the horse they're riding.
+local usingMount = false
 
 local function maskHash(h) return h and (h & 0xFFFFFFFF) or 0 end
 
@@ -35,7 +38,24 @@ local function defaultModel()
     return models[1]
 end
 
+-- The horse the player is currently riding, or nil. GET_MOUNT returns 0 when the
+-- player isn't mounted, so a valid, existing handle means "riding a horse".
+local function ridingHorse()
+    local m = GetMount(PlayerPedId())   -- 0xE7E11B8DCBED1058
+    if m and m ~= 0 and DoesEntityExist(m) then return m end
+    return nil
+end
+
+-- Pick the horse to edit tack on: the one the player is riding if mounted,
+-- otherwise spawn a clean preview horse to dress.
 local function spawnPreview()
+    local mount = ridingHorse()
+    if mount then
+        usingMount = true
+        previewHorse = mount
+        return previewHorse
+    end
+    usingMount = false
     local p = PlayerPedId()
     local c = GetEntityCoords(p)
     local h = GetEntityHeading(p)
@@ -57,8 +77,12 @@ local function spawnPreview()
 end
 
 local function despawnPreview()
-    if previewHorse and DoesEntityExist(previewHorse) then da_obj.delete(previewHorse) end
+    -- Only delete a horse we spawned — never the player's own mount.
+    if not usingMount and previewHorse and DoesEntityExist(previewHorse) then
+        da_obj.delete(previewHorse)
+    end
     previewHorse = nil
+    usingMount = false
 end
 
 -- ---- data views ----
@@ -92,17 +116,21 @@ local function itemsFor(catName)
                     entries[#entries + 1] = e
                 end
             else
-                -- _..._TINT_NNN items collapse into one entry stepped from the
-                -- bottom tint bar, like base/tint garments.
-                local tintBase = it.name and it.name:match("^(.+)_TINT_%d+$")
-                if tintBase then
-                    local e = byBase[tintBase]
+                -- Collapse a trailing numeric suffix into one entry stepped from
+                -- the bottom tint bar: _TINT_NNN tints AND the plain _NNN series
+                -- tack uses (e.g. HORSE_..._BLANKET_02_NEW_000..004 -> one "blanket
+                -- 02 new" with 5 steps; NEW vs USED stay separate prefixes). The
+                -- group key is the name minus that trailing _NNN. Nameless (#hash)
+                -- and named-without-a-number items stand alone.
+                local groupKey = it.name and (it.name:match("^(.+)_TINT_%d+$") or it.name:match("^(.+)_%d+$"))
+                if groupKey then
+                    local e = byBase[groupKey]
                     if not e then
-                        e = { id = tintBase, label = pretty(tintBase), variants = {}, _tints = {} }
-                        byBase[tintBase] = e
+                        e = { id = groupKey, label = pretty(groupKey), variants = {}, _tints = {} }
+                        byBase[groupKey] = e
                         entries[#entries + 1] = e
                     end
-                    e._tints[#e._tints + 1] = { n = tonumber(it.name:match("_TINT_(%d+)$")) or 0, h = maskHash(hash) }
+                    e._tints[#e._tints + 1] = { n = tonumber(it.name:match("_(%d+)$")) or 0, h = maskHash(hash) }
                 else
                     local h = maskHash(hash)
                     entries[#entries + 1] = {
