@@ -232,6 +232,7 @@ Citizen.CreateThread(function()
     da_mode.register({
         name = "tack",
         priority = 65,
+        disableGame = true, -- suppress baseline Game keymaps (e.g. xanims x) while active
         onActivate = function()
             open = true
             spawnPreview()
