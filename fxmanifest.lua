@@ -47,5 +47,6 @@ files {
 }
 
 dependencies {
+    'da_log',
     'da_lib',
 }
